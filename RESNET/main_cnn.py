@@ -16,7 +16,7 @@ import numpy as np
 import os
 from os import listdir
 import pandas as pd
-
+from imbalance_degree import imbalance_degree
 import random as random
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
@@ -87,8 +87,6 @@ for i in range(len(folders)):
     x_train_new = np.concatenate((x_train_new, np.array(x_mino)))
 
     y_train_new = np.concatenate((y_train_new, y_mino))
-
-    _, rat_beg = np.unique(y_train_new, return_counts=True)
     #
     #tmp_raw=0
     #for ite in range(2):
@@ -134,8 +132,6 @@ for i in range(len(folders)):
     res = list() # list for accu
     e = 1/nb_class
 
-    # On raw undersampled
-
     accu = 0
     mcc = 0
     f = np.array([0.0 for cl in range(nb_class)])
@@ -144,7 +140,7 @@ for i in range(len(folders)):
     g = np.array([0.0 for cl in range(nb_class)])
 
     for i in range(3):
-        taccu,tmcc, tf, trec, tpres, tg = raw_data(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class)
+        taccu,tmcc, tf, trec, tpres, tg = ROS_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class)
 
         accu += taccu
         mcc += tmcc
@@ -160,10 +156,6 @@ for i in range(len(folders)):
     evolutionmcc.append(mcc/3) #mcc
     evolutionrec.append(rec/3) #precision
     evolutionpres.append(pres/3) #recall
-
-
-
-    
     ee = [rat[majority_class] for ouiclass in range(nb_class)]
 
     _, new_rat = np.unique(copy, return_counts=True)
@@ -211,7 +203,7 @@ for i in range(len(folders)):
 
 
           for ite in range(3):
-            taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class,rat_beg, sp_strg)
+            taccu,tmcc, tf, trec, tpres, tg = ROS_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, sp_strg)
 
 
             accu += taccu
@@ -233,49 +225,19 @@ for i in range(len(folders)):
           add_nb +=1
 
 
-    accu = 0
-    mcc = 0
-    f = np.array([0.0 for cl in range(nb_class)])
-    rec = np.array([0.0 for cl in range(nb_class)])
-    pres = np.array([0.0 for cl in range(nb_class)])
-    g = np.array([0.0 for cl in range(nb_class)])
-
-    full_sp = {i:max(rat_beg) for i in range(len(rat_beg))}
-    zero_add = {i:rat_beg[i] for i in range(len(rat_beg))}
-
-    for i in range(3):
-        taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, rat_beg,full_sp)
-
-        accu += taccu
-        mcc += tmcc
-        f += tf
-
-        rec += trec
-        pres += tpres
-        g += tg
-
-    evolutionf.append(f/3) # f1 scores
-    evolutiong.append(g/3) #g means
-    evolutiona.append(accu/3) #accuracy
-    evolutionmcc.append(mcc/3) #mcc
-    evolutionrec.append(rec/3) #precision
-    evolutionpres.append(pres/3) #recall
 
 
 
 
-    meth = '/Jitter'
-
-
-    os.makedirs('Results/'+ dataset + meth, exist_ok=True)
+    os.makedirs('Results/'+ dataset + '/SMOTE', exist_ok=True)
 
 
     KL = pd.DataFrame(tmp)
 
-    pd.DataFrame(evolutionf).to_csv('Results/'+ dataset + meth +'/'+ 'f1_evolution.csv')
-    pd.DataFrame(evolutiong).to_csv('Results/'+ dataset + meth +'/'+ 'g_evolution.csv')
-    pd.DataFrame(evolutiona).to_csv('Results/'+ dataset + meth +'/'+ 'accu_evolution.csv')
-    pd.DataFrame(evolutionmcc).to_csv('Results/'+ dataset + meth +'/'+ 'mcc_evolution.csv')
-    pd.DataFrame(evolutionrec).to_csv('Results/'+ dataset + meth +'/'+ 'rec_evolution.csv')
-    pd.DataFrame(evolutionpres).to_csv('Results/'+ dataset + meth +'/'+ 'pres_evolution.csv')
-    KL.to_csv(f'Results/{dataset}' +  meth + '/' +'KL.csv')
+    pd.DataFrame(evolutionf).to_csv('Results/'+ dataset + '/ROS/' + 'f1_evolution.csv')
+    pd.DataFrame(evolutiong).to_csv('Results/'+ dataset + '/ROS/' + 'g_evolution.csv')
+    pd.DataFrame(evolutiona).to_csv('Results/'+ dataset + '/ROS/' + 'accu_evolution.csv')
+    pd.DataFrame(evolutionmcc).to_csv('Results/'+ dataset + '/ROS/' + 'mcc_evolution.csv')
+    pd.DataFrame(evolutionrec).to_csv('Results/'+ dataset + '/ROS/' + 'rec_evolution.csv')
+    pd.DataFrame(evolutionpres).to_csv('Results/'+ dataset + '/ROS/' + 'pres_evolution.csv')
+    KL.to_csv(f'Results/{dataset}/ROS/KL.csv')

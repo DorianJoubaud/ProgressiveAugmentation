@@ -11,7 +11,7 @@ import utils.helper as hlp
 import matplotlib.pyplot as plt
 from tensorflow.keras.utils import to_categorical
 from main_functions import *
-from resnet import Classifier_RESNET
+from lstm import Classifier_LSTM
 import numpy as np
 import os
 from os import listdir
@@ -211,7 +211,7 @@ for i in range(len(folders)):
 
 
           for ite in range(3):
-            taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class,rat_beg, sp_strg)
+            taccu,tmcc, tf, trec, tpres, tg = ROS_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, sp_strg)
 
 
             accu += taccu
@@ -244,7 +244,7 @@ for i in range(len(folders)):
     zero_add = {i:rat_beg[i] for i in range(len(rat_beg))}
 
     for i in range(3):
-        taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, rat_beg,full_sp)
+        taccu,tmcc, tf, trec, tpres, tg = ROS_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, full_sp)
 
         accu += taccu
         mcc += tmcc
@@ -264,7 +264,7 @@ for i in range(len(folders)):
 
 
 
-    meth = '/Jitter'
+    meth = '/ROS'
 
 
     os.makedirs('Results/'+ dataset + meth, exist_ok=True)

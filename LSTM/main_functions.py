@@ -9,7 +9,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from imblearn.over_sampling import SMOTE
 from imblearn.over_sampling import ADASYN
-from resnet import *
+from lstm import *
 from utils.input_data import read_data_sets
 import utils.datasets as ds
 import utils.augmentation as augm
@@ -72,25 +72,27 @@ def min_classes(d, e):
         return len(d[d < e])
 
 def raw_data(dataset, x_train, y_train, x_test, y_test, input_shape, nb_classes):
-    model = Classifier_RESNET('models/Raw/'+dataset, input_shape, nb_classes, False)
+    model = Classifier_LSTM('models/Raw/'+dataset, input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_raw = to_categorical(ds.class_offset(y_train, dataset), nb_classes)
     model.fit(x_train, y_raw)
     y_pred = model.predict(x_test)
 
-    f = f1_score(y_test, y_pred, average = None)
+    f = f1_score(y_test, y_pred, average = None).tolist()
     accu = accuracy_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
-    rec = recall_score(y_test, y_pred, average=None)
-    pres = precision_score(y_test, y_pred, average=None)
-    g = geometric_mean_score(y_test, y_pred, average=None)
+    rec = recall_score(y_test, y_pred, average=None).tolist()
+    pres = precision_score(y_test, y_pred, average=None).tolist()
+    g = geometric_mean_score(y_test, y_pred, average=None).tolist()
     return accu, mcc, f, rec, pres, g
+
+
 def ROS_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes, sp_str):
     #Don t forget to put y train & y test to categorical
 
     oversample = RandomOverSampler(sampling_strategy=sp_str)
     X_over, y_over = oversample.fit_resample(x_train[:,:,0], y_train)
-    model = Classifier_RESNET('models/Ros/', input_shape, nb_classes, False)
+    model = Classifier_LSTM('models/ROS/', input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_over = to_categorical(ds.class_offset(y_over, dataset), nb_classes)
     model.fit(X_over, y_over)
@@ -99,12 +101,12 @@ def ROS_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classe
 
     y_pred = model.predict(x_test)
 
-    f = f1_score(y_test, y_pred, average = None)
+    f = f1_score(y_test, y_pred, average = None).tolist()
     accu = accuracy_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
-    rec = recall_score(y_test, y_pred, average=None)
-    pres = precision_score(y_test, y_pred, average=None)
-    g = geometric_mean_score(y_test, y_pred, average=None)
+    rec = recall_score(y_test, y_pred, average=None).tolist()
+    pres = precision_score(y_test, y_pred, average=None).tolist()
+    g = geometric_mean_score(y_test, y_pred, average=None).tolist()
     return accu, mcc, f, rec, pres, g
 
 
@@ -156,7 +158,7 @@ def jitter_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
 
 
               aug, aug_labels = Augmentation(jitter,x_train, y_train,i ,sp_str[i] - rat[i])
-              print(aug.shape,'aug shape -> the time series len')
+              
 
               tilt = 1
             else:
@@ -165,13 +167,13 @@ def jitter_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
 
               aug = np.concatenate((aug,tmp_data))
               aug_labels = np.concatenate((aug_labels, tmp_labels))
-              print(aug.shape,'the full aug -> nb add elt , len time series, 1')
+              
     
     oversamp = np.concatenate((x_train,aug), axis = 0)
-    print(oversamp.shape, 'new train shape')
+    
     oversamp_labels = np.concatenate((y_train,aug_labels), axis = 0)
     oversamp_labels = to_categorical(ds.class_offset(oversamp_labels, dataset), nb_classes)
-    model = Classifier_RESNET('models/Jitter/', input_shape, nb_classes, False)
+    model = Classifier_LSTM('models/Jitter/', input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_over = to_categorical(ds.class_offset(aug_labels, dataset), nb_classes)
     model.fit(aug, y_over)
@@ -180,12 +182,12 @@ def jitter_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
 
     y_pred = model.predict(x_test)
 
-    f = f1_score(y_test, y_pred, average = None)
+    f = f1_score(y_test, y_pred, average = None).tolist()
     accu = accuracy_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
-    rec = recall_score(y_test, y_pred, average=None)
-    pres = precision_score(y_test, y_pred, average=None)
-    g = geometric_mean_score(y_test, y_pred, average=None)
+    rec = recall_score(y_test, y_pred, average=None).tolist()
+    pres = precision_score(y_test, y_pred, average=None).tolist()
+    g = geometric_mean_score(y_test, y_pred, average=None).tolist()
     return accu, mcc, f, rec, pres, g
 
 def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes,sp_str):
@@ -241,7 +243,7 @@ def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes
 
 
               aug, aug_labels = Augmentation(time_warp,x_train, y_train,i ,sp_str[i] - rat[i])
-              print(aug.shape,'aug shape -> the time series len')
+              
 
               tilt = 1
             else:
@@ -250,13 +252,13 @@ def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes
 
               aug = np.concatenate((aug,tmp_data))
               aug_labels = np.concatenate((aug_labels, tmp_labels))
-              print(aug.shape,'the full aug -> nb add elt , len time series, 1')
+              
     
     oversamp = np.concatenate((x_train,aug), axis = 0)
-    print(oversamp.shape, 'new train shape')
+    
     oversamp_labels = np.concatenate((y_train,aug_labels), axis = 0)
     oversamp_labels = to_categorical(ds.class_offset(oversamp_labels, dataset), nb_classes)
-    model = Classifier_RESNET('models/TW/', input_shape, nb_classes, False)
+    model = Classifier_LSTM('models/TW/', input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_over = to_categorical(ds.class_offset(aug_labels, dataset), nb_classes)
     model.fit(aug, y_over)
@@ -265,12 +267,12 @@ def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes
 
     y_pred = model.predict(x_test)
 
-    f = f1_score(y_test, y_pred, average = None)
+    f = f1_score(y_test, y_pred, average = None).tolist()
     accu = accuracy_score(y_test, y_pred)
     mcc = matthews_corrcoef(y_test, y_pred)
-    rec = recall_score(y_test, y_pred, average=None)
-    pres = precision_score(y_test, y_pred, average=None)
-    g = geometric_mean_score(y_test, y_pred, average=None)
+    rec = recall_score(y_test, y_pred, average=None).tolist()
+    pres = precision_score(y_test, y_pred, average=None).tolist()
+    g = geometric_mean_score(y_test, y_pred, average=None).tolist()
     return accu, mcc, f, rec, pres, g
 
 
@@ -284,26 +286,26 @@ def SMOTE_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_clas
             oversample = SMOTE(k_neighbors=2)
             Xo, yo = oversample.fit_resample(x_train[:,:,0], y_train)
         except:
-            return 0
+            return 0,0, np.zeros(nb_classes),np.zeros(nb_classes),np.zeros(nb_classes),np.zeros(nb_classes)
 
 
 
-     model = Classifier_RESNET('models/', input_shape, nb_classes, False)
+     model = Classifier_LSTM('models/SMOTE', input_shape, nb_classes, False)
      model.build_model(input_shape, nb_classes)
      y_over = to_categorical(ds.class_offset(yo, dataset), nb_classes)
      model.fit(Xo, y_over)
      y_pred = model.predict(x_test)
 
-     f = f1_score(y_test, y_pred, average = None)
+     f = f1_score(y_test, y_pred, average = None).tolist()
      accu = accuracy_score(y_test, y_pred)
      mcc = matthews_corrcoef(y_test, y_pred)
-     rec = recall_score(y_test, y_pred, average=None)
-     pres = precision_score(y_test, y_pred, average=None)
-     g = geometric_mean_score(y_test, y_pred, average=None)
+     rec = recall_score(y_test, y_pred, average=None).tolist()
+     pres = precision_score(y_test, y_pred, average=None).tolist()
+     g = geometric_mean_score(y_test, y_pred, average=None).tolist()
      return accu, mcc, f, rec, pres, g
 
-def ADASYN_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes):
-     oversample = ADASYN(sampling_strategy='minority')
+def ADASYN_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes, sp_str = 'all'):
+     oversample = ADASYN(sampling_strategy=sp_str)
      try:
          Xo, yo = oversample.fit_resample(x_train[:,:,0], y_train)
      except:
@@ -312,17 +314,24 @@ def ADASYN_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
             oversample = SMOTE(k_neighbors=1)
             Xo, yo = oversample.fit_resample(x_train[:,:,0], y_train)
          except:
-            return 0
+            return 0,0, np.zeros(nb_classes),np.zeros(nb_classes),np.zeros(nb_classes),np.zeros(nb_classes)
 
      else:
          Xo, yo = oversample.fit_resample(x_train[:,:,0], y_train)
 
 
 
-     model = Classifier_RESNET('models/Ros/', input_shape, nb_classes, False)
+     model = Classifier_LSTM('models/ADASYN/', input_shape, nb_classes, False)
      model.build_model(input_shape, nb_classes)
      y_over = to_categorical(ds.class_offset(yo, dataset), nb_classes)
      model.fit(Xo, y_over)
-     accu = model.evaluate(x_test,y_test)
-     return accu
+     y_pred = model.predict(x_test)
+
+     f = f1_score(y_test, y_pred, average = None).tolist()
+     accu = accuracy_score(y_test, y_pred)
+     mcc = matthews_corrcoef(y_test, y_pred)
+     rec = recall_score(y_test, y_pred, average=None).tolist()
+     pres = precision_score(y_test, y_pred, average=None).tolist()
+     g = geometric_mean_score(y_test, y_pred, average=None).tolist()
+     return accu, mcc, f, rec, pres, g
 

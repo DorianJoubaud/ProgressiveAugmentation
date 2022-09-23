@@ -9,7 +9,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from imblearn.over_sampling import SMOTE
 from imblearn.over_sampling import ADASYN
-from resnet import *
+from cnn import *
 from utils.input_data import read_data_sets
 import utils.datasets as ds
 import utils.augmentation as augm
@@ -72,10 +72,11 @@ def min_classes(d, e):
         return len(d[d < e])
 
 def raw_data(dataset, x_train, y_train, x_test, y_test, input_shape, nb_classes):
-    model = Classifier_RESNET('models/Raw/'+dataset, input_shape, nb_classes, False)
+    model = Classifier_CNN('models/Raw/'+dataset, input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_raw = to_categorical(ds.class_offset(y_train, dataset), nb_classes)
     model.fit(x_train, y_raw)
+    accu = model.evaluate(x_test, y_test)
     y_pred = model.predict(x_test)
 
     f = f1_score(y_test, y_pred, average = None)
@@ -85,12 +86,12 @@ def raw_data(dataset, x_train, y_train, x_test, y_test, input_shape, nb_classes)
     pres = precision_score(y_test, y_pred, average=None)
     g = geometric_mean_score(y_test, y_pred, average=None)
     return accu, mcc, f, rec, pres, g
-def ROS_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes, sp_str):
+def ROS_test(dataset, x_train, y_train, x_test, y_true,  y_test, input_shape,  nb_classes, sp_str):
     #Don t forget to put y train & y test to categorical
 
     oversample = RandomOverSampler(sampling_strategy=sp_str)
     X_over, y_over = oversample.fit_resample(x_train[:,:,0], y_train)
-    model = Classifier_RESNET('models/Ros/', input_shape, nb_classes, False)
+    model = Classifier_CNN('models/Ros/', input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_over = to_categorical(ds.class_offset(y_over, dataset), nb_classes)
     model.fit(X_over, y_over)
@@ -171,7 +172,7 @@ def jitter_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
     print(oversamp.shape, 'new train shape')
     oversamp_labels = np.concatenate((y_train,aug_labels), axis = 0)
     oversamp_labels = to_categorical(ds.class_offset(oversamp_labels, dataset), nb_classes)
-    model = Classifier_RESNET('models/Jitter/', input_shape, nb_classes, False)
+    model = Classifier_CNN('models/Jitter/', input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_over = to_categorical(ds.class_offset(aug_labels, dataset), nb_classes)
     model.fit(aug, y_over)
@@ -188,7 +189,7 @@ def jitter_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
     g = geometric_mean_score(y_test, y_pred, average=None)
     return accu, mcc, f, rec, pres, g
 
-def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes,sp_str):
+def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes, sp_str):
     def Augmentation(function, data, label_data, class_under, nb):
       underReprClass = list()
       idxs = np.where((label_data == class_under))[0]
@@ -256,7 +257,7 @@ def tw_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_classes
     print(oversamp.shape, 'new train shape')
     oversamp_labels = np.concatenate((y_train,aug_labels), axis = 0)
     oversamp_labels = to_categorical(ds.class_offset(oversamp_labels, dataset), nb_classes)
-    model = Classifier_RESNET('models/TW/', input_shape, nb_classes, False)
+    model = Classifier_CNN('models/TW/', input_shape, nb_classes, False)
     model.build_model(input_shape, nb_classes)
     y_over = to_categorical(ds.class_offset(aug_labels, dataset), nb_classes)
     model.fit(aug, y_over)
@@ -288,7 +289,7 @@ def SMOTE_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_clas
 
 
 
-     model = Classifier_RESNET('models/', input_shape, nb_classes, False)
+     model = Classifier_CNN('models/', input_shape, nb_classes, False)
      model.build_model(input_shape, nb_classes)
      y_over = to_categorical(ds.class_offset(yo, dataset), nb_classes)
      model.fit(Xo, y_over)
@@ -319,7 +320,7 @@ def ADASYN_test(dataset, x_train, y_train, x_test,  y_test, input_shape,  nb_cla
 
 
 
-     model = Classifier_RESNET('models/Ros/', input_shape, nb_classes, False)
+     model = Classifier_CNN('models/Ros/', input_shape, nb_classes, False)
      model.build_model(input_shape, nb_classes)
      y_over = to_categorical(ds.class_offset(yo, dataset), nb_classes)
      model.fit(Xo, y_over)

@@ -11,7 +11,7 @@ import utils.helper as hlp
 import matplotlib.pyplot as plt
 from tensorflow.keras.utils import to_categorical
 from main_functions import *
-from resnet import Classifier_RESNET
+from sktime.classification.interval_based import TimeSeriesForestClassifier
 import numpy as np
 import os
 from os import listdir
@@ -30,11 +30,12 @@ bench = list()
 
 #balance = pd.read_csv('balance_measure.csv') #We use Shanon Entropy as reference
 
-folders = os.listdir('data')
-
+#folders = os.listdir('data')
+folders = ['DiatomSizeReduction']
 
 for i in range(len(folders)):
     tmp_bench = list()
+    tmp = list()
     dataset = folders[i]
 
     print(dataset)
@@ -61,8 +62,8 @@ for i in range(len(folders)):
 
     nb_timesteps = int(x_train.shape[1] / nb_dims)
     input_shape = (nb_timesteps , nb_dims)
-    x_test = x_test.reshape((-1, input_shape[0], input_shape[1]))
-    x_train = x_train.reshape((-1, input_shape[0], input_shape[1]))
+  
+    
     y_test = to_categorical(ds.class_offset(y_test, dataset), nb_class)
 
 
@@ -89,6 +90,7 @@ for i in range(len(folders)):
     y_train_new = np.concatenate((y_train_new, y_mino))
 
     _, rat_beg = np.unique(y_train_new, return_counts=True)
+    m = TimeSeriesForestClassifier()
     #
     #tmp_raw=0
     #for ite in range(2):
@@ -144,7 +146,7 @@ for i in range(len(folders)):
     g = np.array([0.0 for cl in range(nb_class)])
 
     for i in range(3):
-        taccu,tmcc, tf, trec, tpres, tg = raw_data(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class)
+        taccu,tmcc, tf, trec, tpres, tg = raw_data(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class,m)
 
         accu += taccu
         mcc += tmcc
@@ -211,7 +213,7 @@ for i in range(len(folders)):
 
 
           for ite in range(3):
-            taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class,rat_beg, sp_strg)
+            taccu,tmcc, tf, trec, tpres, tg = ROS_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, sp_strg,m)
 
 
             accu += taccu
@@ -244,7 +246,7 @@ for i in range(len(folders)):
     zero_add = {i:rat_beg[i] for i in range(len(rat_beg))}
 
     for i in range(3):
-        taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, rat_beg,full_sp)
+        taccu,tmcc, tf, trec, tpres, tg = ROS_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, full_sp,m)
 
         accu += taccu
         mcc += tmcc
@@ -264,7 +266,7 @@ for i in range(len(folders)):
 
 
 
-    meth = '/Jitter'
+    meth = '/ROS'
 
 
     os.makedirs('Results/'+ dataset + meth, exist_ok=True)

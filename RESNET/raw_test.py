@@ -16,7 +16,7 @@ import numpy as np
 import os
 from os import listdir
 import pandas as pd
-
+from imbalance_degree import imbalance_degree
 import random as random
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
@@ -134,14 +134,14 @@ for i in range(len(folders)):
     res = list() # list for accu
     e = 1/nb_class
 
-    # On raw undersampled
-
     accu = 0
     mcc = 0
     f = np.array([0.0 for cl in range(nb_class)])
     rec = np.array([0.0 for cl in range(nb_class)])
     pres = np.array([0.0 for cl in range(nb_class)])
     g = np.array([0.0 for cl in range(nb_class)])
+
+    full_sp = {i:max(rat_beg) for i in range(len(rat_beg))}
 
     for i in range(3):
         taccu,tmcc, tf, trec, tpres, tg = raw_data(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class)
@@ -160,10 +160,6 @@ for i in range(len(folders)):
     evolutionmcc.append(mcc/3) #mcc
     evolutionrec.append(rec/3) #precision
     evolutionpres.append(pres/3) #recall
-
-
-
-    
     ee = [rat[majority_class] for ouiclass in range(nb_class)]
 
     _, new_rat = np.unique(copy, return_counts=True)
@@ -185,97 +181,18 @@ for i in range(len(folders)):
 
 
 
-    #Trig is one hot encodding [0,0,0,...,1,...,0], if stop[i] = 1 => we cannot add new data with label i without adding a new minority class
-    while(add_nb != total_add_nb):
-
-      for i in sorted_rat_next:
-
-        if (new_rat[i] != new_rat[majority_class]):
-
-          copy.append(i)
-          _, tmp_rat = np.unique(copy, return_counts=True)
 
 
 
-
-          tmp.append(KL(ee,tmp_rat))
-          print(tmp_rat)
-          sp_strg = {i:tmp_rat[i] for i in range(len(tmp_rat))}
-          accu = 0
-          mcc = 0
-          f  = np.array([0.0 for cl in range(nb_class)])
-          rec = np.array([0.0 for cl in range(nb_class)])
-          pres = np.array([0.0 for cl in range(nb_class)])
-          g = np.array([0.0 for cl in range(nb_class)])
-
-
-
-          for ite in range(3):
-            taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class,rat_beg, sp_strg)
-
-
-            accu += taccu
-            mcc += tmcc
-            f += tf
-
-            rec += trec
-            pres += tpres
-            g += tg
-
-
-
-          evolutionf.append(f/3) # f1 scores
-          evolutiong.append(g/3) #g means
-          evolutiona.append(accu/3) #accuracy
-          evolutionmcc.append(mcc/3) #mcc
-          evolutionrec.append(rec/3) #precision
-          evolutionpres.append(pres/3) #recall
-          add_nb +=1
-
-
-    accu = 0
-    mcc = 0
-    f = np.array([0.0 for cl in range(nb_class)])
-    rec = np.array([0.0 for cl in range(nb_class)])
-    pres = np.array([0.0 for cl in range(nb_class)])
-    g = np.array([0.0 for cl in range(nb_class)])
-
-    full_sp = {i:max(rat_beg) for i in range(len(rat_beg))}
-    zero_add = {i:rat_beg[i] for i in range(len(rat_beg))}
-
-    for i in range(3):
-        taccu,tmcc, tf, trec, tpres, tg = jitter_test(dataset, x_train_new, y_train_new, x_test,  np.argmax(y_test, axis = 1), input_shape,  nb_class, rat_beg,full_sp)
-
-        accu += taccu
-        mcc += tmcc
-        f += tf
-
-        rec += trec
-        pres += tpres
-        g += tg
-
-    evolutionf.append(f/3) # f1 scores
-    evolutiong.append(g/3) #g means
-    evolutiona.append(accu/3) #accuracy
-    evolutionmcc.append(mcc/3) #mcc
-    evolutionrec.append(rec/3) #precision
-    evolutionpres.append(pres/3) #recall
-
-
-
-
-    meth = '/Jitter'
-
-
-    os.makedirs('Results/'+ dataset + meth, exist_ok=True)
+    os.makedirs('Results/'+ dataset + '/Raw', exist_ok=True)
 
 
     KL = pd.DataFrame(tmp)
 
-    pd.DataFrame(evolutionf).to_csv('Results/'+ dataset + meth +'/'+ 'f1_evolution.csv')
-    pd.DataFrame(evolutiong).to_csv('Results/'+ dataset + meth +'/'+ 'g_evolution.csv')
-    pd.DataFrame(evolutiona).to_csv('Results/'+ dataset + meth +'/'+ 'accu_evolution.csv')
-    pd.DataFrame(evolutionmcc).to_csv('Results/'+ dataset + meth +'/'+ 'mcc_evolution.csv')
-    pd.DataFrame(evolutionrec).to_csv('Results/'+ dataset + meth +'/'+ 'rec_evolution.csv')
-    pd.DataFrame(evolutionpres).to_csv('Results/'+ dataset + meth +'/'+ 'pres_evolution.csv')
-    KL.to_csv(f'Results/{dataset}' +  meth + '/' +'KL.csv')
+    pd.DataFrame(evolutionf).to_csv('Results/'+ dataset + '/Raw/' + 'f1_evolution.csv')
+    pd.DataFrame(evolutiong).to_csv('Results/'+ dataset + '/Raw/' + 'g_evolution.csv')
+    pd.DataFrame(evolutiona).to_csv('Results/'+ dataset + '/Raw/' + 'accu_evolution.csv')
+    pd.DataFrame(evolutionmcc).to_csv('Results/'+ dataset + '/Raw/' + 'mcc_evolution.csv')
+    pd.DataFrame(evolutionrec).to_csv('Results/'+ dataset + '/Raw/' + 'rec_evolution.csv')
+    pd.DataFrame(evolutionpres).to_csv('Results/'+ dataset + '/Raw/' + 'pres_evolution.csv')
+    KL.to_csv(f'Results/{dataset}/Raw/KL.csv')
